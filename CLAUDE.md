@@ -1,7 +1,7 @@
 # Agent instructions
 
 Before any task in this repo: **read `skills/README.md`** — it is the router.
-Find the task in its table and load exactly **one** skill (plus `skills/flyrank/flyrank-data/SKILL.md`
+Find the task in its table and load exactly **one** skill (plus `skills/flyrank/flyrank-data/SKILL.md` 
 whenever the task touches the data). Do not load every skill; keep context small.
 
 Ground rules for this repo:
