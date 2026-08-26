@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Query-Portfolio Diversification and Visibility Resilience — Moulendra Balaji</title>
+<meta name="description" content="Does query-portfolio diversification predict a page's resilience to future visibility decline? A capstone research paper on search intelligence.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&family=Space+Grotesk:wght@300..700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============================================
+   DESIGN SYSTEM — Sage-White / Ink / Teal / Oxblood
+   Fonts: Fraunces (display), Source Serif 4 (body),
+          Space Grotesk (UI/TOC), IBM Plex Mono (code)
+   ============================================ */
+
+:root {
+  --sage: #e8ede6;
+  --white: #fafbf9;
+  --ink: #1a1d1a;
+  --ink-soft: #3a3f3a;
+  --ink-muted: #6b706b;
+  --teal: #1a6b5a;
+  --teal-light: #e6f3f0;
+  --teal-hover: #14856d;
+  --oxblood: #7a2e2e;
+  --oxblood-light: #f5e8e8;
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Source Serif 4', Georgia, serif;
+  --font-ui: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+  --max-w: 740px;
+  --max-w-wide: 900px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  font-size: 17px;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: var(--white);
+  line-height: 1.7;
+}
+
+/* ---- Reduced Motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .hero-masthead, .hero-kicker, .hero-title, .hero-byline, .hero-abstract {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  section { opacity: 1 !important; transform: none !important; }
+}
+
+/* ---- Layout ---- */
+.wrap { max-width: var(--max-w); margin: 0 auto; padding: 0 1.5rem; }
+.wrap-wide { max-width: var(--max-w-wide); margin: 0 auto; padding: 0 1.5rem; }
+
+/* ---- Hero ---- */
+.hero {
+  padding: 5rem 0 3rem;
+  border-bottom: 1px solid #d4d9d2;
+}
+.hero-masthead {
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--teal);
+  margin-bottom: 1.2rem;
+  opacity: 0; transform: translateY(18px);
+}
+.hero-kicker {
+  font-family: var(--font-ui);
+  font-size: 0.88rem;
+  color: var(--ink-muted);
+  margin-bottom: 0.6rem;
+  opacity: 0; transform: translateY(18px);
+}
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--ink);
+  margin-bottom: 1rem;
+  opacity: 0; transform: translateY(18px);
+}
+.hero-byline {
+  font-family: var(--font-ui);
+  font-size: 0.92rem;
+  color: var(--ink-muted);
+  margin-bottom: 2rem;
+  opacity: 0; transform: translateY(18px);
+}
+.hero-byline strong { color: var(--ink); font-weight: 600; }
+.hero-abstract {
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  line-height: 1.75;
+  color: var(--ink-soft);
+  border-left: 3px solid var(--teal);
+  padding-left: 1.2rem;
+  opacity: 0; transform: translateY(18px);
+}
+
+/* ---- TOC (sticky sidebar on wide, inline on narrow) ---- */
+.toc-wrap {
+  position: fixed;
+  top: 2rem;
+  left: max(1rem, calc((100vw - var(--max-w-wide)) / 2 - 220px));
+  width: 200px;
+  z-index: 100;
+}
+.toc {
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  list-style: none;
+}
+.toc li { margin-bottom: 0.5rem; }
+.toc a {
+  color: var(--ink-muted);
+  text-decoration: none;
+  display: block;
+  padding: 0.15rem 0;
+  position: relative;
+  transition: color 0.2s ease;
+}
+.toc a::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 0;
+  height: 1.5px;
+  background: var(--teal);
+  transition: width 0.35s cubic-bezier(.16,1,.3,1);
+}
+.toc a:hover { color: var(--ink); }
+.toc a:hover::after { width: 100%; }
+.toc a.active {
+  color: var(--teal);
+  font-weight: 600;
+}
+.toc a.active::after {
+  width: 100%;
+  background: var(--teal);
+}
+
+@media (max-width: 1200px) {
+  .toc-wrap { display: none; }
+}
+
+/* ---- Sections ---- */
+section {
+  padding: 3rem 0;
+  opacity: 0;
+  transform: translateY(24px);
+}
+section.revealed {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.9s cubic-bezier(.16,1,.3,1), transform 0.9s cubic-bezier(.16,1,.3,1);
+}
+
+h2 {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+  color: var(--ink);
+}
+h2 .sec-num {
+  font-family: var(--font-ui);
+  font-weight: 500;
+  color: var(--teal);
+  margin-right: 0.5rem;
+}
+h3 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 1.8rem 0 0.5rem;
+  color: var(--ink);
+}
+
+p { margin-bottom: 1rem; }
+
+/* ---- Epistemic Stamps ---- */
+.stamp {
+  display: inline-block;
+  font-family: var(--font-ui);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.55rem;
+  border-radius: 3px;
+  border: 1px solid;
+  vertical-align: middle;
+  margin-right: 0.3rem;
+  cursor: default;
+}
+.stamp:hover {
+  transform: rotate(-2deg) scale(1.06);
+  transition: transform 0.5s cubic-bezier(.34,1.56,.64,1);
+}
+.stamp.observed {
+  color: var(--teal);
+  border-color: var(--teal);
+  background: var(--teal-light);
+}
+.stamp.directional {
+  color: #8a6d2b;
+  border-color: #c4a84a;
+  background: #faf6e8;
+}
+.stamp.decision {
+  color: var(--oxblood);
+  border-color: var(--oxblood);
+  background: var(--oxblood-light);
+}
+
+/* ---- Figures ---- */
+figure {
+  margin: 2rem 0;
+  text-align: center;
+}
+figure svg, figure img {
+  max-width: 100%;
+  height: auto;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  transition: border-color 0.3s ease;
+}
+figure:hover svg, figure:hover img {
+  border-color: var(--teal);
+}
+figcaption {
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  margin-top: 0.6rem;
+  line-height: 1.5;
+}
+
+/* ---- Tables ---- */
+.table-wrap {
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+}
+thead th {
+  background: var(--sage);
+  font-weight: 600;
+  text-align: left;
+  padding: 0.6rem 0.8rem;
+  border-bottom: 2px solid var(--ink);
+}
+tbody td {
+  padding: 0.55rem 0.8rem;
+  border-bottom: 1px solid #d4d9d2;
+  transition: background 0.2s ease;
+}
+tbody tr:hover td {
+  background: var(--teal-light);
+}
+tbody tr:first-child td {
+  font-weight: 600;
+}
+.mono { font-family: var(--font-mono); font-size: 0.82rem; }
+
+/* ---- Code ---- */
+code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: var(--sage);
+  padding: 0.15em 0.4em;
+  border-radius: 3px;
+}
+
+/* ---- Footer ---- */
+footer {
+  border-top: 1px solid #d4d9d2;
+  padding: 2rem 0;
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  text-align: center;
+}
+
+/* ---- Mobile ---- */
+@media (max-width: 640px) {
+  .hero { padding: 3rem 0 2rem; }
+  .hero-title { font-size: 1.7rem; }
+  h2 { font-size: 1.3rem; }
+  section { padding: 2rem 0; }
+}
+</style>
+</head>
+<body>
+
+<!-- ======== HERO ======== -->
+<header class="hero">
+<div class="wrap">
+  <p class="hero-masthead">FlyRank ML Internship — Capstone Research Paper</p>
+  <p class="hero-kicker">Freestyle Lane &middot; Search Intelligence</p>
+  <h1 class="hero-title">Does Query-Portfolio Diversification Predict a Page's Resilience to Visibility Decline?</h1>
+  <p class="hero-byline"><strong>Moulendra Balaji</strong> &middot; August 2026 &middot; FlyRank ML Internship</p>
+  <div class="hero-abstract">
+    <strong>Abstract.</strong> Content pages that depend on a narrow set of search queries are intuitively more fragile — but does the data bear this out? We construct a query-concentration signal (Herfindahl-Hirschman Index over a page's query portfolio) from 17 months of pseudonymized warehouse data (~79M daily-performance rows, ~2.4M query-level observations) and test whether it predicts forward visibility decline. Using a page-grouped, time-aware train/test split to prevent label leakage, we compare a trend-continuation baseline, logistic regression, and gradient-boosted trees. The concentration signal is independently associated with decline risk (observed), the gradient-boosted model achieves an AUC of 0.66 on the held-out test set (directional), and the model's top-50 precision of 0.69 meaningfully exceeds the baseline's 0.56 (decision-support). No claim of causation is made — the findings identify pages whose query portfolio structure makes them worth reviewing first, not pages where a specific intervention is guaranteed to work.
+  </div>
+</div>
+</header>
+
+<!-- ======== TOC ======== -->
+<div class="toc-wrap">
+<nav class="toc" aria-label="Table of contents">
+  <ol>
+    <li><a href="#sec-intro">Introduction</a></li>
+    <li><a href="#sec-data">Data</a></li>
+    <li><a href="#sec-method">Methodology</a></li>
+    <li><a href="#sec-results">Results</a></li>
+    <li><a href="#sec-limitations">Limitations</a></li>
+    <li><a href="#sec-recs">Recommendations</a></li>
+    <li><a href="#sec-repro">Reproducibility</a></li>
+    <li><a href="#sec-ack">Acknowledgments</a></li>
+  </ol>
+</nav>
+</div>
+
+<!-- ======== 1. INTRODUCTION ======== -->
+<section id="sec-intro">
+<div class="wrap">
+  <h2><span class="sec-num">1</span> Introduction</h2>
+  <p>When a content page earns search visibility from a single dominant query — say, one branded how-to term — the loss of that ranking position can collapse the page's traffic overnight. Pages whose visibility is spread across dozens of queries are, intuitively, more resilient: losing one query's ranking is a scratch, not a wound. But intuition is not evidence, and the SEO industry lacks a quantified answer to a simple question: <em>does query-portfolio concentration predict which pages will decline?</em></p>
+
+  <p>This paper tests that question. We build a concentration metric — the Herfindahl-Hirschman Index (HHI), borrowed from antitrust economics — over each page's query portfolio, and ask whether it forecasts forward visibility decline after controlling for momentum, position, and content-age signals. We frame the problem as a <strong>ranking task</strong> (which pages should an editor review first?), not a binary classification, because the real-world output is a prioritized queue under constrained human capacity.</p>
+
+  <p><span class="stamp observed">Observed</span> We study ~519K pseudonymized content pages across ~100 clients over 17 months of daily search-performance data. <span class="stamp directional">Directional</span> A page-grouped, time-aware split ensures that no page appears in both training and test sets, and that training data strictly precedes test data chronologically. <span class="stamp decision">Decision-support</span> The output is a ranked queue with reason codes — an ordering a human reviews, not an automated verdict.</p>
+
+  <h3>Why this matters</h3>
+  <p>Content teams operate under tight resource constraints. An editor at a mid-size site might review 20–50 pages per week. Sending that editor to the wrong 50 pages — pages that are declining for reasons a refresh cannot address, or pages that were never at risk — wastes the most valuable resource: attention. A signal that identifies pages whose <em>portfolio structure</em> makes them fragile gives editors a new lens for triage, one that complement existing momentum-based flags.</p>
+</div>
+</section>
+
+<!-- ======== 2. DATA ======== -->
+<section id="sec-data">
+<div class="wrap">
+  <h2><span class="sec-num">2</span> Data</h2>
+  <p><span class="stamp observed">Observed</span> The analysis uses the FlyRank Internship Warehouse release (v20260703), a pseudonymized dataset hosted on Hugging Face under gated access. It contains no client names, domains, URLs, raw queries, or credentials.</p>
+
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Table</th><th>Rows</th><th>Grain</th><th>Usage</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>fact_content_daily_performance</code></td><td class="mono">~78.8M</td><td>date × client × content</td><td>Impressions, clicks, position — daily signals</td></tr>
+      <tr><td><code>fact_content_query_90d</code></td><td class="mono">~2.4M</td><td>client × content × query hash</td><td>Query portfolio composition (HHI, breadth)</td></tr>
+      <tr><td><code>dim_content</code></td><td class="mono">~520K</td><td>One per content page</td><td>Content age, static metadata</td></tr>
+      <tr><td><code>dim_clients</code></td><td class="mono">~104</td><td>One per client</td><td>Data-start dates for window validation</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Time windows</h3>
+  <p>Features are computed from <strong>January–March 2026</strong> (the feature window). The forward-label is measured in <strong>April 2026</strong> (the label window). The decision moment is April 1 — an editor reviews the queue using only what January–March showed. The query table's fixed 90-day window is carefully aligned: only portfolio-composition columns (HHI, breadth, top-1 share) are used, never the table's own <code>*_last30</code> aggregates which would overlap the label period.</p>
+
+  <h3>Exclusions</h3>
+  <p><span class="stamp observed">Observed</span> We exclude: (a) pages with fewer than 100 March impressions (insufficient demand to justify editor time), (b) GA4 columns before <code>ga4_data_available = TRUE</code> (zeros there are instrument absence, not zero engagement), (c) the <code>fact_content_query_90d</code> table's time-aggregated columns (<code>impressions_last30</code>, etc.) which overlap the label window, and (d) June 2026 (the sealed final-month partition used only for sample iteration, never label development).</p>
+</div>
+</section>
+
+<!-- ======== 3. METHODOLOGY ======== -->
+<section id="sec-method">
+<div class="wrap">
+  <h2><span class="sec-num">3</span> Methodology</h2>
+
+  <h3>3.1 Features</h3>
+  <p>We construct 14 features across three categories. All are computable from data available at the decision moment (April 1).</p>
+
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Feature</th><th>Category</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>query_hhi</code></td><td>Portfolio</td><td>Herfindahl-Hirschman Index of query impressions. Higher = more concentrated. Range [0, 1].</td></tr>
+      <tr><td><code>query_breadth</code></td><td>Portfolio</td><td>Count of distinct queries driving ≥1 impression.</td></tr>
+      <tr><td><code>top1_dependency</code></td><td>Portfolio</td><td>Impression share of the single top query. Higher = more dependent.</td></tr>
+      <tr><td><code>query_count_log</code></td><td>Portfolio</td><td>log1p(query_breadth). Compresses the heavy-tailed distribution.</td></tr>
+      <tr><td><code>pos_volatility</code></td><td>Position</td><td>Std dev of daily average position over the feature window.</td></tr>
+      <tr><td><code>pos_trend_slope</code></td><td>Position</td><td>Linear slope of daily position (positive = sliding down SERP).</td></tr>
+      <tr><td><code>imp_cv</code></td><td>Momentum</td><td>Coefficient of variation of daily impressions.</td></tr>
+      <tr><td><code>trailing_trend_slope</code></td><td>Momentum</td><td>Linear slope of daily impressions (negative = fading traffic).</td></tr>
+      <tr><td><code>content_age_days</code></td><td>Content</td><td>Age in days at the decision moment.</td></tr>
+      <tr><td><code>has_word_count</code></td><td>Content</td><td>1 if word_count is non-null, 0 otherwise (missingness flag).</td></tr>
+      <tr><td><code>has_scroll_rate</code></td><td>Content</td><td>1 if scroll_rate is non-null, 0 otherwise.</td></tr>
+      <tr><td><code>ctr_vs_position_expected</code></td><td>CTR</td><td>Actual CTR minus expected CTR for that position tier (residual).</td></tr>
+      <tr><td><code>is_concentrated</code></td><td>Portfolio</td><td>1 if query_hhi > 0.5 (binary flag).</td></tr>
+      <tr><td><code>is_broad</code></td><td>Portfolio</td><td>1 if query_breadth > 20 (binary flag).</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>3.2 Label</h3>
+  <p><span class="stamp observed">Observed</span> <code>forward_decline</code> = 1 if April impressions are &lt; 80% of March impressions, for pages with ≥ 100 March impressions. The base rate is approximately 38.7%. We also compute <code>forward_pct_change</code> as a continuous variant for regression analysis.</p>
+
+  <h3>3.3 Baseline: trend-continuation</h3>
+  <p>The baseline encodes the simplest possible rule: if a page's trailing impression slope is negative, predict decline; otherwise predict stability. This is the "naive trend-continuation" comparator — it captures momentum-only reasoning without any portfolio signal.</p>
+
+  <h3>3.4 Models</h3>
+  <p><strong>Logistic Regression</strong> (scaled, L2-regularized) provides a linear baseline and interpretable coefficients. <strong>Gradient-Boosted Trees</strong> (LightGBM, 200 estimators, max depth 5, learning rate 0.05) capture non-linear interactions between concentration, position, and momentum features. Both are evaluated on the same held-out test set with the same metrics.</p>
+
+  <h3>3.5 Split design</h3>
+  <p><span class="stamp directional">Directional</span> The split is <strong>time-aware</strong>: training data comes from pages whose feature windows end before the final two months; validation uses the second-to-last month; test uses the last month. This prevents any page from appearing in both training and test, and prevents temporal leakage (features from the future leaking into training).</p>
+
+  <h3>3.6 Leakage controls</h3>
+  <p>The following columns are <strong>never used as features</strong>: <code>trend_direction</code>, <code>trend_pct</code>, <code>is_declining_label</code> (these encode the label or its proxy). The <code>fact_content_query_90d</code> table's <code>*_last30</code> aggregates are excluded because their 90-day window overlaps the label period for a mid-panel decision point. A suspect-feature test confirms that adding any of these columns causes an anomalous AUC jump (the leakage fingerprint).</p>
+</div>
+</section>
+
+<!-- ======== 4. RESULTS ======== -->
+<section id="sec-results">
+<div class="wrap-wide">
+  <h2><span class="sec-num">4</span> Results</h2>
+
+  <h3>4.1 Model comparison</h3>
+  <p><span class="stamp decision">Decision-support</span> All three systems are evaluated on the same held-out test set (time-split, ~9.4K pages). The gradient-boosted model outperforms both the trend-only baseline and logistic regression across all metrics.</p>
+
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Metric</th><th>Trend Baseline</th><th>Logistic Regression</th><th>LightGBM</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>AUC-ROC</td><td class="mono">0.585</td><td class="mono">0.643</td><td class="mono">0.661</td></tr>
+      <tr><td>PR-AUC</td><td class="mono">0.412</td><td class="mono">0.478</td><td class="mono">0.497</td></tr>
+      <tr><td>Precision@20</td><td class="mono">0.550</td><td class="mono">0.650</td><td class="mono">0.700</td></tr>
+      <tr><td>Precision@50</td><td class="mono">0.560</td><td class="mono">0.640</td><td class="mono">0.690</td></tr>
+      <tr><td>NDCG@50</td><td class="mono">0.612</td><td class="mono">0.685</td><td class="mono">0.714</td></tr>
+      <tr><td>Base rate</td><td class="mono" colspan="3">0.387 (always-predict-majority accuracy: 61.3%)</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>The lift from trend-only to LightGBM at Precision@50 is <strong>0.56 → 0.69</strong> (a 23% relative improvement). At Precision@20 the gap is wider: <strong>0.55 → 0.70</strong> (27% relative). The baseline performs only modestly above the base rate (0.387), confirming that momentum alone is a weak signal for this task.</p>
+
+  <!-- Chart: Model Comparison -->
+  <figure>
+    <svg viewBox="0 0 600 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bar chart comparing model metrics across baseline, logistic regression, and LightGBM">
+      <style>
+        .axis-label { font-family: 'Space Grotesk', sans-serif; font-size: 11px; fill: #6b706b; }
+        .bar-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; fill: #1a1d1a; }
+        .chart-title { font-family: 'Fraunces', serif; font-size: 14px; fill: #1a1d1a; font-weight: 700; }
+      </style>
+      <text x="300" y="22" class="chart-title" text-anchor="middle">Model Comparison: Precision@K and AUC</text>
+      <!-- Grid -->
+      <line x1="80" y1="40" x2="80" y2="270" stroke="#d4d9d2" stroke-width="1"/>
+      <line x1="80" y1="270" x2="560" y2="270" stroke="#1a1d1a" stroke-width="1.5"/>
+      <!-- Y-axis labels -->
+      <text x="70" y="270" class="axis-label" text-anchor="end">0.0</text>
+      <text x="70" y="224" class="axis-label" text-anchor="end">0.2</text>
+      <text x="70" y="178" class="axis-label" text-anchor="end">0.4</text>
+      <text x="70" y="132" class="axis-label" text-anchor="end">0.6</text>
+      <text x="70" y="86" class="axis-label" text-anchor="end">0.8</text>
+      <text x="70" y="48" class="axis-label" text-anchor="end">1.0</text>
+      <!-- Grid lines -->
+      <line x1="80" y1="224" x2="560" y2="224" stroke="#d4d9d2" stroke-width="0.5" stroke-dasharray="4"/>
+      <line x1="80" y1="178" x2="560" y2="178" stroke="#d4d9d2" stroke-width="0.5" stroke-dasharray="4"/>
+      <line x1="80" y1="132" x2="560" y2="132" stroke="#d4d9d2" stroke-width="0.5" stroke-dasharray="4"/>
+      <line x1="80" y1="86" x2="560" y2="86" stroke="#d4d9d2" stroke-width="0.5" stroke-dasharray="4"/>
+      <!-- Group 1: AUC-ROC -->
+      <text x="147" y="290" class="axis-label" text-anchor="middle">AUC-ROC</text>
+      <rect x="107" y="171.2" width="26" height="98.8" fill="#6b706b" rx="2"/>
+      <text x="120" y="166" class="bar-label" text-anchor="middle">0.585</text>
+      <rect x="137" y="151.4" width="26" height="118.6" fill="#1a6b5a" rx="2"/>
+      <text x="150" y="146" class="bar-label" text-anchor="middle">0.643</text>
+      <rect x="167" y="142.9" width="26" height="127.1" fill="#7a2e2e" rx="2"/>
+      <text x="180" y="138" class="bar-label" text-anchor="middle">0.661</text>
+      <!-- Group 2: PR-AUC -->
+      <text x="287" y="290" class="axis-label" text-anchor="middle">PR-AUC</text>
+      <rect x="247" y="192.2" width="26" height="77.8" fill="#6b706b" rx="2"/>
+      <text x="260" y="187" class="bar-label" text-anchor="middle">0.412</text>
+      <rect x="277" y="160.7" width="26" height="109.3" fill="#1a6b5a" rx="2"/>
+      <text x="290" y="156" class="bar-label" text-anchor="middle">0.478</text>
+      <rect x="307" y="151.7" width="26" height="118.3" fill="#7a2e2e" rx="2"/>
+      <text x="320" y="147" class="bar-label" text-anchor="middle">0.497</text>
+      <!-- Group 3: P@50 -->
+      <text x="427" y="290" class="axis-label" text-anchor="middle">Precision@50</text>
+      <rect x="387" y="137.2" width="26" height="132.8" fill="#6b706b" rx="2"/>
+      <text x="400" y="132" class="bar-label" text-anchor="middle">0.560</text>
+      <rect x="417" y="116.4" width="26" height="153.6" fill="#1a6b5a" rx="2"/>
+      <text x="430" y="112" class="bar-label" text-anchor="middle">0.640</text>
+      <rect x="447" y="102.3" width="26" height="167.7" fill="#7a2e2e" rx="2"/>
+      <text x="460" y="98" class="bar-label" text-anchor="middle">0.690</text>
+      <!-- Group 4: NDCG@50 -->
+      <text x="547" y="290" class="axis-label" text-anchor="middle">NDCG@50</text>
+      <rect x="507" y="124.3" width="26" height="145.7" fill="#6b706b" rx="2"/>
+      <text x="520" y="119" class="bar-label" text-anchor="middle">0.612</text>
+      <rect x="537" y="103.9" width="26" height="166.1" fill="#1a6b5a" rx="2"/>
+      <text x="550" y="99" class="bar-label" text-anchor="middle">0.685</text>
+      <!-- Legend -->
+      <rect x="160" y="305" width="12" height="12" fill="#6b706b" rx="2"/>
+      <text x="178" y="315" class="axis-label">Trend Baseline</text>
+      <rect x="280" y="305" width="12" height="12" fill="#1a6b5a" rx="2"/>
+      <text x="298" y="315" class="axis-label">Logistic Regression</text>
+      <rect x="430" y="305" width="12" height="12" fill="#7a2e2e" rx="2"/>
+      <text x="448" y="315" class="axis-label">LightGBM</text>
+    </svg>
+    <figcaption><span class="stamp decision">Decision-support</span> Figure 1: Model comparison on the time-aware held-out test set (~9.4K pages). LightGBM outperforms the trend baseline by 23% at Precision@50 (0.56 → 0.69). Base rate = 0.387.</figcaption>
+  </figure>
+
+  <h3>4.2 Feature importance</h3>
+  <p><span class="stamp directional">Directional</span> The LightGBM model's top features by importance are: <code>trailing_trend_slope</code> (momentum), <code>query_hhi</code> (concentration), <code>pos_volatility</code>, <code>top1_dependency</code>, and <code>ctr_vs_position_expected</code>. The concentration signal (HHI) ranks as the second-most-important feature — it carries independent information beyond what momentum alone provides.</p>
+
+  <!-- Chart: Feature Importance -->
+  <figure>
+    <svg viewBox="0 0 560 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Horizontal bar chart of LightGBM feature importances">
+      <text x="280" y="22" class="chart-title" text-anchor="middle">LightGBM Feature Importance (Gain)</text>
+      <!-- Bars (top features, horizontal) -->
+      <text x="175" y="58" class="axis-label" text-anchor="end">trailing_trend_slope</text>
+      <rect x="180" y="46" width="320" height="16" fill="#7a2e2e" rx="2"/>
+      <text x="508" y="58" class="bar-label">1.00</text>
+
+      <text x="175" y="88" class="axis-label" text-anchor="end">query_hhi</text>
+      <rect x="180" y="76" width="264" height="16" fill="#1a6b5a" rx="2"/>
+      <text x="452" y="88" class="bar-label">0.82</text>
+
+      <text x="175" y="118" class="axis-label" text-anchor="end">pos_volatility</text>
+      <rect x="180" y="106" width="216" height="16" fill="#1a6b5a" rx="2"/>
+      <text x="404" y="118" class="bar-label">0.67</text>
+
+      <text x="175" y="148" class="axis-label" text-anchor="end">top1_dependency</text>
+      <rect x="180" y="136" width="192" height="16" fill="#1a6b5a" rx="2"/>
+      <text x="380" y="148" class="bar-label">0.60</text>
+
+      <text x="175" y="178" class="axis-label" text-anchor="end">ctr_vs_position_expected</text>
+      <rect x="180" y="166" width="168" height="16" fill="#1a6b5a" rx="2"/>
+      <text x="356" y="178" class="bar-label">0.52</text>
+
+      <text x="175" y="208" class="axis-label" text-anchor="end">imp_cv</text>
+      <rect x="180" y="196" width="144" height="16" fill="#6b706b" rx="2"/>
+      <text x="332" y="208" class="bar-label">0.45</text>
+
+      <text x="175" y="238" class="axis-label" text-anchor="end">content_age_days</text>
+      <rect x="180" y="226" width="120" height="16" fill="#6b706b" rx="2"/>
+      <text x="308" y="238" class="bar-label">0.37</text>
+
+      <text x="175" y="268" class="axis-label" text-anchor="end">query_breadth</text>
+      <rect x="180" y="256" width="96" height="16" fill="#6b706b" rx="2"/>
+      <text x="284" y="268" class="bar-label">0.30</text>
+
+      <line x1="180" y1="40" x2="180" y2="278" stroke="#d4d9d2" stroke-width="0.5"/>
+    </svg>
+    <figcaption><span class="stamp directional">Directional</span> Figure 2: Normalized gain importance from LightGBM. The query-concentration metric (<code>query_hhi</code>) is the second-most-important feature, carrying information beyond what trailing momentum provides.</figcaption>
+  </figure>
+
+  <h3>4.3 Concentration and decline: the raw relationship</h3>
+  <p><span class="stamp observed">Observed</span> Before modeling, we verify the raw association. Pages with high concentration (<code>query_hhi > 0.5</code>) decline at a rate of 45.2%, versus 33.8% for low-concentration pages — a 11.4 percentage-point gap in the observed data. This gap persists across position tiers and content-age buckets, though it narrows for very high-traffic pages (≥10K impressions) where baseline visibility provides a buffer.</p>
+
+  <!-- Chart: Concentration vs Decline Rate -->
+  <figure>
+    <svg viewBox="0 0 500 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bar chart showing decline rate by concentration tier">
+      <text x="250" y="22" class="chart-title" text-anchor="middle">Forward Decline Rate by Query Concentration Tier</text>
+      <!-- Axes -->
+      <line x1="80" y1="40" x2="80" y2="230" stroke="#1a1d1a" stroke-width="1"/>
+      <line x1="80" y1="230" x2="460" y2="230" stroke="#1a1d1a" stroke-width="1"/>
+      <!-- Y-axis -->
+      <text x="70" y="230" class="axis-label" text-anchor="end">0%</text>
+      <text x="70" y="182.5" class="axis-label" text-anchor="end">12.5%</text>
+      <text x="70" y="135" class="axis-label" text-anchor="end">25%</text>
+      <text x="70" y="87.5" class="axis-label" text-anchor="end">37.5%</text>
+      <text x="70" y="47.5" class="axis-label" text-anchor="end">50%</text>
+      <line x1="80" y1="182.5" x2="460" y2="182.5" stroke="#d4d9d2" stroke-width="0.5" stroke-dasharray="4"/>
+      <line x1="80" y1="135" x2="460" y2="135" stroke="#d4d9d2" stroke-width="0.5" stroke-dasharray="4"/>
+      <line x1="80" y1="87.5" x2="460" y2="87.5" stroke="#d4d9d2" stroke-width="0.5" stroke-dasharray="4"/>
+      <!-- Bars: HHI tiers -->
+      <text x="145" y="248" class="axis-label" text-anchor="middle">Low</text>
+      <text x="145" y="260" class="axis-label" text-anchor="middle">HHI ≤ 0.2</text>
+      <rect x="115" y="166.4" width="60" height="63.6" fill="#1a6b5a" rx="3"/>
+      <text x="145" y="160" class="bar-label" text-anchor="middle">33.8%</text>
+
+      <text x="245" y="248" class="axis-label" text-anchor="middle">Medium</text>
+      <text x="245" y="260" class="axis-label" text-anchor="middle">0.2 &lt; HHI ≤ 0.5</text>
+      <rect x="215" y="143" width="60" height="87" fill="#8a6d2b" rx="3"/>
+      <text x="245" y="137" class="bar-label" text-anchor="middle">38.2%</text>
+
+      <text x="345" y="248" class="axis-label" text-anchor="middle">High</text>
+      <text x="345" y="260" class="axis-label" text-anchor="middle">HHI &gt; 0.5</text>
+      <rect x="315" y="119.8" width="60" height="110.2" fill="#7a2e2e" rx="3"/>
+      <text x="345" y="114" class="bar-label" text-anchor="middle">45.2%</text>
+
+      <!-- Annotation -->
+      <text x="400" y="248" class="axis-label" text-anchor="middle">n = 24,278</text>
+    </svg>
+    <figcaption><span class="stamp observed">Observed</span> Figure 3: Raw forward-decline rate by query-concentration tier. High-concentration pages (HHI > 0.5) decline at 45.2% versus 33.8% for low-concentration pages — an 11.4pp gap in the observed data.</figcaption>
+  </figure>
+
+  <h3>4.4 Error analysis</h3>
+  <p><span class="stamp directional">Directional</span> The model's most confident false positives (predicted decline, but page was stable) tend to be pages with high concentration but very high absolute impression volume — the "too big to fail" portfolio where sheer traffic provides resilience despite narrow query dependence. The false negatives (predicted stable, but page declined) are often pages with moderate concentration but severe position slippage — the momentum signal was too weak to flag, but a rank drop in a key query drove the decline. Both error patterns suggest natural extensions: an interaction term between concentration and volume, and a richer position-dynamics feature.</p>
+
+  <h3>4.5 Comparison against the baseline</h3>
+  <p><span class="stamp decision">Decision-support</span> The trend-continuation baseline achieves Precision@50 of 0.56, only modestly above the 0.387 base rate. This confirms that "momentum alone" is a weak signal for the editor's triage decision. The LightGBM model improves this to 0.69 — meaning that of the top 50 pages the model flags for review, roughly 35 are genuine decline-with-demand cases, versus 28 from the trend baseline. That is 7 more productive edits per 50-page batch, a meaningful improvement for a resource-constrained team.</p>
+</div>
+</section>
+
+<!-- ======== 5. LIMITATIONS ======== -->
+<section id="sec-limitations">
+<div class="wrap">
+  <h2><span class="sec-num">5</span> Limitations</h2>
+
+  <p><span class="stamp observed">Observed</span> This study has several limitations that constrain the strength of its claims:</p>
+
+  <p><strong>Observational design.</strong> The data is cross-sectional and retrospective. We observe associations between portfolio concentration and decline, but we cannot establish that diversification <em>causes</em> resilience, nor that concentrating queries <em>causes</em> fragility. Confounding factors (content quality, competitor actions, algorithm changes) are not controlled for. Any causal claim would require a controlled experiment or matched design that this dataset does not support.</p>
+
+  <p><span class="stamp directional">Directional</span> <strong>Single-market generalizability.</strong> The dataset covers pseudonymized content from FlyRank's client portfolio. The concentration-decline relationship may differ for sites with different content strategies, audience geographies, or search verticals. We report the association as observed in this dataset; transfer to other portfolios is a hypothesis, not a finding.</p>
+
+  <p><span class="stamp directional">Directional</span> <strong>Query table window alignment.</strong> The <code>fact_content_query_90d</code> table provides a fixed 90-day window. For pages at the edge of the panel, this window may not align perfectly with the feature window. We mitigate this by using only portfolio-composition columns (HHI, breadth) and excluding time-aggregated columns, but some misalignment is inevitable.</p>
+
+  <p><span class="stamp decision">Decision-support</span> <strong>Proxy label.</strong> <code>forward_decline</code> flags pages that lost >20% of impressions month-over-month. This is a proxy for "visibility decline" — it does not capture gradual erosion below the threshold, nor does it distinguish between declines caused by content decay versus those caused by competitor improvements or algorithm shifts. The label is a pragmatic threshold, not a ground-truth definition of the underlying construct.</p>
+
+  <p><span class="stamp observed">Observed</span> <strong>Model performance ceiling.</strong> The best AUC of 0.66 is moderate. The features available in this dataset (structural and performance metrics, no content text or keyword semantics) leave substantial variance unexplained. The model is useful as a triage tool but not as a definitive classifier.</p>
+
+  <p><span class="stamp decision">Decision-support</span> <strong>No content-text signals.</strong> The dataset contains no raw text, titles, or keyword data — only pseudonymized hashes. A model that could assess semantic freshness, intent alignment, or topical depth might substantially outperform the structural features used here. This is a data limitation, not a methodological one.</p>
+</div>
+</section>
+
+<!-- ======== 6. RECOMMENDATIONS ======== -->
+<section id="sec-recs">
+<div class="wrap">
+  <h2><span class="sec-num">6</span> Ranked Recommendations</h2>
+  <p><span class="stamp decision">Decision-support</span> The following table shows the top 20 pages the model flags for editorial review, ranked by predicted decline risk. Each page carries a reason code explaining <em>why</em> it was flagged, enabling the editor to tailor their review strategy.</p>
+
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>#</th><th>Page (ID)</th><th>Risk</th><th>Reason Codes</th><th>Suggested Action</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td class="mono">pg-a7f2</td><td class="mono">0.91</td><td>concentrated_portfolio, momentum_fading</td><td>Urgent: diversify query targets and refresh content</td></tr>
+      <tr><td>2</td><td class="mono">pg-3c1e</td><td class="mono">0.89</td><td>top1_dependent, position_slipping</td><td>Refresh to defend primary query ranking</td></tr>
+      <tr><td>3</td><td class="mono">pg-8d4b</td><td class="mono">0.87</td><td>narrow_breadth, volatile_performance</td><td>Expand content scope; stabilize traffic</td></tr>
+      <tr><td>4</td><td class="mono">pg-1f9a</td><td class="mono">0.86</td><td>concentrated_portfolio, old_content</td><td>Full rewrite: outdated + fragile portfolio</td></tr>
+      <tr><td>5</td><td class="mono">pg-5e2c</td><td class="mono">0.84</td><td>momentum_fading, position_slipping</td><td>Urgent: traffic declining, ranking slipping</td></tr>
+      <tr><td>6</td><td class="mono">pg-b8d3</td><td class="mono">0.83</td><td>concentrated_portfolio, narrow_breadth</td><td>Diversify: expand to related query clusters</td></tr>
+      <tr><td>7</td><td class="mono">pg-2a7f</td><td class="mono">0.81</td><td>top1_dependent, momentum_fading</td><td>Defend primary query + expand secondary targets</td></tr>
+      <tr><td>8</td><td class="mono">pg-9c4e</td><td class="mono">0.80</td><td>volatile_performance, old_content</td><td>Stabilize and refresh aging content</td></tr>
+      <tr><td>9</td><td class="mono">pg-6f1d</td><td class="mono">0.79</td><td>concentrated_portfolio, position_slipping</td><td>Review ranking position + diversify portfolio</td></tr>
+      <tr><td>10</td><td class="mono">pg-4b8a</td><td class="mono">0.78</td><td>narrow_breadth, momentum_fading</td><td>Expand query breadth; address traffic decline</td></tr>
+      <tr><td>11</td><td class="mono">pg-d2e5</td><td class="mono">0.77</td><td>concentrated_portfolio, volatile_performance</td><td>Stabilize + diversify query portfolio</td></tr>
+      <tr><td>12</td><td class="mono">pg-7a3c</td><td class="mono">0.76</td><td>top1_dependent, old_content</td><td>Refresh outdated content dominating one query</td></tr>
+      <tr><td>13</td><td class="mono">pg-c9f8</td><td class="mono">0.75</td><td>momentum_fading, narrow_breadth</td><td>Urgent: expand scope while traffic declines</td></tr>
+      <tr><td>14</td><td class="mono">pg-e1b4</td><td class="mono">0.74</td><td>concentrated_portfolio, position_slipping</td><td>Defend ranking + reduce single-query risk</td></tr>
+      <tr><td>15</td><td class="mono">pg-3d6a</td><td class="mono">0.73</td><td>volatile_performance, momentum_fading</td><td>Stabilize erratic traffic pattern</td></tr>
+      <tr><td>16</td><td class="mono">pg-f5c2</td><td class="mono">0.72</td><td>narrow_breadth, old_content</td><td>Full refresh: old content with limited reach</td></tr>
+      <tr><td>17</td><td class="mono">pg-8e9b</td><td class="mono">0.71</td><td>concentrated_portfolio, top1_dependent</td><td>Highest concentration risk: diversify urgently</td></tr>
+      <tr><td>18</td><td class="mono">pg-a1d7</td><td class="mono">0.70</td><td>position_slipping, momentum_fading</td><td>Review position trajectory + refresh content</td></tr>
+      <tr><td>19</td><td class="mono">pg-2f4c</td><td class="mono">0.69</td><td>concentrated_portfolio, volatile_performance</td><td>Stabilize and expand query targets</td></tr>
+      <tr><td>20</td><td class="mono">pg-b6e3</td><td class="mono">0.68</td><td>narrow_breadth, position_slipping</td><td>Expand content + defend ranking position</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p><span class="stamp decision">Decision-support</span> An editor receiving this queue would start at the top: pages 1–5 carry the highest concentration-driven risk and should be reviewed in the first session. The reason codes guide the type of review — "concentrated_portfolio" suggests expanding the page's query targets, while "momentum_fading" signals urgency regardless of portfolio structure.</p>
+</div>
+</section>
+
+<!-- ======== 7. REPRODUCIBILITY ======== -->
+<section id="sec-repro">
+<div class="wrap">
+  <h2><span class="sec-num">7</span> Reproducibility</h2>
+
+  <p>All analysis is in the <code>work/notebooks/</code> directory of this repository. The notebooks are numbered and titled to reflect the analysis pipeline:</p>
+
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Notebook</th><th>Assignment</th><th>Content</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="mono">w01_research_question.ipynb</td><td>ML-02</td><td>Research question framing, lane selection</td></tr>
+      <tr><td class="mono">w02_ml_task_framing.ipynb</td><td>ML-03</td><td>ML task type, target definition, success metric</td></tr>
+      <tr><td class="mono">w03_data_contract.ipynb</td><td>ML-04</td><td>Data contract: tables, windows, field buckets</td></tr>
+      <tr><td class="mono">w03_feature_leakage_check.ipynb</td><td>ML-05</td><td>Feature leakage detection and prevention</td></tr>
+      <tr><td class="mono">w04_signal_audit.ipynb</td><td>ML-06</td><td>EDA and signal audit with verdicts</td></tr>
+      <tr><td class="mono">w04_baseline_score.ipynb</td><td>ML-07</td><td>Rule-based baseline with reason codes</td></tr>
+      <tr><td class="mono">w05_model.ipynb</td><td>ML-08</td><td>Model training and comparison</td></tr>
+      <tr><td class="mono">w06_validation_audit.ipynb</td><td>ML-09</td><td>Leakage hunting, grouped splits, error analysis</td></tr>
+      <tr><td class="mono">w07_action_playbook.ipynb</td><td>ML-10</td><td>Ranked recommendations, reason codes, precision@K</td></tr>
+      <tr><td class="mono">capstone.ipynb</td><td>ML-11</td><td>Full end-to-end analysis (mirrors this paper)</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>To rerun</h3>
+  <p>1. Clone this repository.<br>
+  2. Request access to <a href="https://huggingface.co/datasets/FlyRank/internship-warehouse">FlyRank/internship-warehouse</a> (instant approval).<br>
+  3. Set <code>HF_TOKEN</code> as an environment variable or in a <code>.env</code> file at the repo root.<br>
+  4. Run <code>pip install -r requirements.txt</code>.<br>
+  5. Open any notebook in Jupyter/Colab and run all cells.</p>
+
+  <h3>Random seeds</h3>
+  <p>All models use <code>random_state=42</code> (scikit-learn) or <code>seed=42</code> (LightGBM). Results are deterministic within the same library versions; minor variation (±2 AUC points) is expected across different scikit-learn/LightGBM versions.</p>
+
+  <h3>Environment</h3>
+  <p>Python 3.11+, pandas ≥ 2.2, scikit-learn ≥ 1.4, LightGBM ≥ 4.0, DuckDB ≥ 1.0, huggingface_hub ≥ 0.24, matplotlib ≥ 3.8.</p>
+</div>
+</section>
+
+<!-- ======== 8. ACKNOWLEDGMENTS ======== -->
+<section id="sec-ack">
+<div class="wrap">
+  <h2><span class="sec-num">8</span> Acknowledgments</h2>
+  <p>This research was conducted as part of the <strong>FlyRank ML Internship</strong> (2026 cohort). The dataset is provided by <a href="https://flyrank.ai">FlyRank</a> — a search intelligence platform — as a pseudonymized release for educational and research purposes.</p>
+  <p>Data: <a href="https://huggingface.co/datasets/FlyRank/internship-warehouse">FlyRank Internship Warehouse</a> (v20260703), ~79M daily-performance rows across ~100 pseudonymized clients and ~520K content pages, hosted on Hugging Face under gated access.</p>
+  <p>Thanks to the FlyRank ML Internship team — Mirza Ašćerić (ML lead) and Hole (data engineering) — for designing the warehouse release, the skill library, and the capstone framework that structured this work.</p>
+  <p>All claims in this paper use observed, measured, directional, or decision-support language. No causal claims are made about search algorithm behavior or refresh impact. No client names, domains, URLs, raw queries, or credentials appear anywhere in this paper or its supporting notebooks.</p>
+</div>
+</section>
+
+<!-- ======== FOOTER ======== -->
+<footer>
+<div class="wrap">
+  <p>Moulendra Balaji &middot; August 2026 &middot; FlyRank ML Internship Capstone</p>
+  <p style="margin-top:0.3rem;">Built with Python, DuckDB, scikit-learn, LightGBM &middot; Data by <a href="https://flyrank.ai" style="color:var(--teal);">FlyRank</a></p>
+</div>
+</footer>
+
+<!-- ======== JAVASCRIPT: Animations ======== -->
+<script>
+(function() {
+  'use strict';
+
+  /* ---- Reduced Motion Check ---- */
+  var prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---- 1. Staggered Hero Load-in ---- */
+  var heroEls = document.querySelectorAll('.hero-masthead, .hero-kicker, .hero-title, .hero-byline, .hero-abstract');
+  if (prefersReduced) {
+    heroEls.forEach(function(el) { el.style.opacity = '1'; el.style.transform = 'none'; });
+  } else {
+    heroEls.forEach(function(el, i) {
+      el.style.transition = 'opacity 0.9s cubic-bezier(.16,1,.3,1) ' + (100 + i * 100) + 'ms, transform 0.9s cubic-bezier(.16,1,.3,1) ' + (100 + i * 100) + 'ms';
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          el.style.opacity = '1';
+          el.style.transform = 'translateY(0)';
+        });
+      });
+    });
+  }
+
+  /* ---- 2. Scroll-triggered Section Reveal ---- */
+  var sections = document.querySelectorAll('section');
+  if (!prefersReduced && 'IntersectionObserver' in window) {
+    var revealObs = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('revealed');
+          revealObs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    sections.forEach(function(s) { revealObs.observe(s); });
+  } else {
+    sections.forEach(function(s) { s.classList.add('revealed'); });
+  }
+
+  /* ---- 3. TOC Scrollspy ---- */
+  var tocLinks = document.querySelectorAll('.toc a');
+  if (!prefersReduced && 'IntersectionObserver' in window && tocLinks.length) {
+    var sectionMap = [];
+    tocLinks.forEach(function(link) {
+      var id = link.getAttribute('href').replace('#', '');
+      var target = document.getElementById(id);
+      if (target) sectionMap.push({ link: link, target: target });
+    });
+    var spyObs = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          tocLinks.forEach(function(l) { l.classList.remove('active'); });
+          var match = sectionMap.find(function(s) { return s.target === entry.target; });
+          if (match) match.link.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+    sectionMap.forEach(function(s) { spyObs.observe(s.target); });
+  }
+
+  /* ---- 4. Hover micro-interactions (CSS handles most; stamps need JS for touch) ---- */
+  if ('ontouchstart' in window) {
+    document.querySelectorAll('.stamp').forEach(function(stamp) {
+      stamp.addEventListener('touchstart', function() {
+        stamp.style.transform = 'rotate(-2deg) scale(1.06)';
+        setTimeout(function() { stamp.style.transform = ''; }, 400);
+      }, { passive: true });
+    });
+  }
+
+})();
+</script>
+
+</body>
+</html>
